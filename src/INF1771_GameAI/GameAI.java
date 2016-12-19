@@ -158,13 +158,13 @@ public class GameAI
      * Observations received
      * @param o	 list of observations
      */
-public void GetObservations(List<String> o) {
+    public void GetObservations(List<String> o) {
 		
 		State lastState = currentState;
 		currentState = State.allFine;
     	
 		// aStar activation parameters
-		if(decisionsCount == 40 && map.hasZone('p')) {
+		if(aStarPath == null && decisionsCount == 40 && map.hasZone('p')) {
 			
 			decisionsCount = 0;
 			currentState = State.aStar;
@@ -180,7 +180,7 @@ public void GetObservations(List<String> o) {
 				}
 			}
 		}
-		else if(energy <= 50 && map.hasZone('h')) {
+		else if(aStarPath == null && energy <= 50 && map.hasZone('h')) {
 			
 			decisionsCount = 0;
 			currentState = State.aStar;
@@ -196,6 +196,8 @@ public void GetObservations(List<String> o) {
 				}
 			}
 		}
+		else if(decisionsCount == 40)
+			decisionsCount = 0;
 		
 		if(aStarPath == null){
 			if (o.isEmpty())
@@ -226,7 +228,7 @@ public void GetObservations(List<String> o) {
 				} else if (s.equals("hit")) {
 
 					shotsFired = 0;
-					// currentState = lastState;
+					currentState = lastState;
 				} else {
 					currentState = State.allFine;
 				}
@@ -276,7 +278,13 @@ public void GetObservations(List<String> o) {
 				return "andar";
 			
 			case foundWall:
-				lastCommand = "andar";
+				
+				if(lastCommand.contains("virar")) {
+					lastCommand = "andar";
+					return "andar";
+				}
+				
+				lastCommand = "virar_esquerda";
 				return "virar_esquerda";
 				
 			case sawDanger:
