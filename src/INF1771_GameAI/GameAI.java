@@ -23,15 +23,16 @@ public class GameAI
 	}
 	
 	State currentState = State.allFine;
-	boolean shot = true;
-	String lastCommand; //armazena o "undo" do último comando, ou seja, o comando contrário. Usado ao encontrar perigo.
-	int shotsFired; //guarda quantos tiros foram dados sem confirmação de hit
+	boolean hit = true;
+	String lastCommand;
+	int shotsFired;
 	MapKnowledge map = new MapKnowledge();
 	
 	// Things for AStar
 	int decisionsCount = 0;
 	List<Zone> aStarPath = null;
 	Zone nextDestination = null;
+	boolean pinState = false;
 	
     Position player = new Position();
     String state = "ready";
@@ -58,8 +59,8 @@ public class GameAI
         if(map.getBotZone() != null)
         	map.getBotZone().setBot(null);
         
-        map.getZones()[player.y][player.x].setBot(this);
-        map.setBotZone(map.getZones()[player.y][player.x]);
+        map.getZones()[player.x][player.y].setBot(this);
+        map.setBotZone(map.getZones()[player.x][player.y]);
         
         if(map.getBotZone().getType() == 'u')
         	map.getBotZone().setType('.');
@@ -172,6 +173,8 @@ public class GameAI
 			
 			aStarPath.remove(aStarPath.size()-1); // Getting rid of the bot's position
 			
+			pinState = true;
+			
 			for(int k = 1; k < 13; k++) {
 				for(int l = 1; l < 13; l++) {
 					map.getZones()[k][l].setF(-1);
@@ -188,6 +191,8 @@ public class GameAI
 			
 			aStarPath.remove(aStarPath.size()-1); // Getting rid of the bot's position
 			
+			pinState = true;
+			
 			for(int k = 1; k < 13; k++) {
 				for(int l = 1; l < 13; l++) {
 					map.getZones()[k][l].setF(-1);
@@ -199,7 +204,7 @@ public class GameAI
 		else if(decisionsCount == 40)
 			decisionsCount = 0;
 		
-		if(aStarPath == null){
+		if(!pinState){
 			if (o.isEmpty())
 				System.out.println("Sem observações");
 
@@ -274,52 +279,143 @@ public class GameAI
 		switch(currentState){
 		
 			case allFine:
-				lastCommand = "andar";
-				return "andar";
+				
+				if(viewAhead()) {
+					
+					lastCommand = "andar";
+					return "andar";
+				}
+				else if(dir.contains("north")) {
+					
+					if(!map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited()) {
+						
+						lastCommand = "virar_esquerda";
+						return "virar_esquerda";
+					}
+					else if(!map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited()) {
+						
+						lastCommand = "virar_direita";
+						return "virar_direita";
+					}
+				}
+				else if(dir.contains("south")) {
+					
+					if(!map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited()) {
+						
+						lastCommand = "virar_direita";
+						return "virar_direita";
+					}
+					else if(!map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited()) {
+						
+						lastCommand = "virar_esquerda";
+						return "virar_esquerda";
+					}
+				}
+				else if(dir.contains("west")) {
+					
+					if(!map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited()) {
+						
+						lastCommand = "virar_direita";
+						return "virar_direita";
+					}
+					else if(!map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited()) {
+						
+						lastCommand = "virar_esquerda";
+						return "virar_esquerda";
+					}
+				}
+				else if(dir.contains("east")) {
+					
+					if(!map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited()) {
+						
+						lastCommand = "virar_esquerda";
+						return "virar_esquerda";
+					}
+					else if(!map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited()) {
+						
+						lastCommand = "virar_direita";
+						return "virar_direita";
+					}
+				}
+				else {
+					lastCommand = "andar";
+					return "andar";
+				}
 			
 			case foundWall:
 				
-				if(lastCommand.contains("virar")) {
+				if(!pinState) {
+					pinState = true;
+					lastCommand = "virar_esquerda";
+					return "virar_esquerda";
+				}
+				else {
+					pinState = false;
 					lastCommand = "andar";
 					return "andar";
 				}
 				
-				lastCommand = "virar_esquerda";
-				return "virar_esquerda";
-				
 			case sawDanger:
-				if(lastCommand == null)
-					return "andar_re";
 				
-				return lastCommand;
+				if(!pinState) {
+					pinState = true;
+					lastCommand = "andar_re";
+					return "andar_re";
+				}
+				else {
+					if(lastCommand.contains("andar_re")) {
+						lastCommand = "virar_esquerda";
+						return "virar_esquerda";
+					}
+					else {
+						pinState = false;
+						lastCommand = "andar";
+						return "andar";
+					}
+				}
 				
 			case heardEnemy:
 				
-		    	if(shot) {
+		    	shotsFired++;
 		    		
-		    		shot = false;
+		    	if(shotsFired < 10) {
+		    			
+		    		lastCommand = "atacar";
+	    			return "atacar";
+		    	}
+		    	else if(!hit) {
+		    		shotsFired = 0;
 		    		lastCommand = "virar_esquerda";
 		    		return "virar_esquerda";
 		    	}
-		    	else { 
-		    		
-		    		shot = true;
-		    		
-		    		if(shotsFired < 5){
-		    			shotsFired++;
-		    			lastCommand = "atacar";
-		    			return "atacar";
-		    		}
-		    		else{
-		    			shotsFired = 0;
-		    			lastCommand = "andar";
-		    			return "andar";
-		    		}
+		    	else {
+		    		shotsFired = 0;
+		    		lastCommand = "andar";
+		    		return "andar";
 		    	}
+		    	
 		    case sawEnemy:
-		    	lastCommand = "atacar";
-		    	return "atacar";
-			case sawHealth:
+		    	
+		    	shotsFired++;
+	    		
+		    	if(shotsFired < 10) {
+		    			
+		    		lastCommand = "atacar";
+	    			return "atacar";
+		    	}
+		    	else if(!hit) {
+		    		shotsFired = 0;
+		    		lastCommand = "virar_esquerda";
+		    		return "virar_esquerda";
+		    	}
+		    	else {
+		    		shotsFired = 0;
+		    		lastCommand = "andar";
+		    		return "andar";
+		    	}
+			
+		    case sawHealth:
+		    	
 				map.getBotZone().setType('h');
 				
 				if(energy <= 70) {
@@ -330,7 +426,9 @@ public class GameAI
 					lastCommand = "andar";
 					return "andar";
 				}
+				
 			case sawTreasure:
+				
 				map.getBotZone().setType('p');
 				
 				lastCommand = "pegar_ouro";
@@ -346,6 +444,10 @@ public class GameAI
 					if(dir.contains("south")) {
 						nextDestination = null;
 						lastCommand = "andar";
+						
+						if(aStarPath == null)
+							pinState = false;
+						
 						return "andar";
 					}
 					else if(dir.contains("west") || dir.contains("north")) {
@@ -362,6 +464,10 @@ public class GameAI
 					if(dir.contains("north")) {
 						nextDestination = null;
 						lastCommand = "andar";
+						
+						if(aStarPath == null)
+							pinState = false;
+						
 						return "andar";
 					}
 					else if(dir.contains("west") || dir.contains("south")) {
@@ -378,6 +484,10 @@ public class GameAI
 					if(dir.contains("west")) {
 						nextDestination = null;
 						lastCommand = "andar";
+						
+						if(aStarPath == null)
+							pinState = false;
+						
 						return "andar";
 					}
 					else if(dir.contains("south") || dir.contains("east")) {
@@ -394,6 +504,10 @@ public class GameAI
 					if(dir.contains("east")) {
 						nextDestination = null;
 						lastCommand = "andar";
+						
+						if(aStarPath == null)
+							pinState = false;
+						
 						return "andar";
 					}
 					else if(dir.contains("north") || dir.contains("east")) {
@@ -407,11 +521,25 @@ public class GameAI
 				}	
 				
 			default:
+				
 				lastCommand = "andar";
 				return "andar";	
 		}
 	}
 	
+	private boolean viewAhead() {
+		
+		if((dir.contains("north") && !map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited())
+		||(dir.contains("south") && !map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited())
+		||(dir.contains("east") && !map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited())
+		||(dir.contains("west") && !map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited())
+		||(map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited() && map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited()
+			&& map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited() && map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited()))
+			return true;
+		
+		return false;
+	}
+
 	// Returns the path to the closest zone of type asked
 		private List<Zone> getClosestPath(char type) {
 			
