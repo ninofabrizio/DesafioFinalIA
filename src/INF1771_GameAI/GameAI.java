@@ -163,6 +163,7 @@ public class GameAI
 		
 		State lastState = currentState;
 		currentState = State.allFine;
+		
     	
 		// aStar activation parameters
 		if(aStarPath == null && decisionsCount == 40 && map.hasZone('p')) {
@@ -170,7 +171,7 @@ public class GameAI
 			decisionsCount = 0;
 			currentState = State.aStar;
 			aStarPath = getClosestPath('p');
-			
+			if(aStarPath != null) {
 			aStarPath.remove(aStarPath.size()-1); // Getting rid of the bot's position
 			
 			pinState = true;
@@ -182,13 +183,14 @@ public class GameAI
 					map.getZones()[k][l].setParent(null);
 				}
 			}
+			}
 		}
 		else if(aStarPath == null && energy <= 50 && map.hasZone('h')) {
 			
 			decisionsCount = 0;
 			currentState = State.aStar;
 			aStarPath = getClosestPath('h');
-			
+			if(aStarPath != null) {
 			aStarPath.remove(aStarPath.size()-1); // Getting rid of the bot's position
 			
 			pinState = true;
@@ -199,6 +201,7 @@ public class GameAI
 					map.getZones()[k][l].setG(-1);
 					map.getZones()[k][l].setParent(null);
 				}
+			}
 			}
 		}
 		else if(decisionsCount == 40)
@@ -273,6 +276,7 @@ public class GameAI
 	    	}
 		}*/
 		
+		
 		if(currentState != State.aStar)
 			decisionsCount++;
 		
@@ -341,6 +345,8 @@ public class GameAI
 					lastCommand = "andar";
 					return "andar";
 				}
+				
+				
 			
 			case foundWall:
 				
@@ -439,7 +445,7 @@ public class GameAI
 				if(nextDestination == null && aStarPath != null)
 					nextDestination = aStarPath.remove(aStarPath.size()-1);
 				
-				if(map.getBotZone().getI() + 1 == nextDestination.getI() && map.getBotZone().getJ() == nextDestination.getJ()) {
+				if(map.getBotZone() != null && map.getBotZone().getI() + 1 == nextDestination.getI() && map.getBotZone().getJ() == nextDestination.getJ()) {
 						
 					if(dir.contains("south")) {
 						nextDestination = null;
@@ -459,7 +465,7 @@ public class GameAI
 						return "virar_direita";
 					}
 				}
-				else if(map.getBotZone().getI() - 1 == nextDestination.getI() && map.getBotZone().getJ() == nextDestination.getJ() && this.dir.contains("north")) {
+				else if(map.getBotZone() != null && map.getBotZone().getI() - 1 == nextDestination.getI() && map.getBotZone().getJ() == nextDestination.getJ() && this.dir.contains("north")) {
 				
 					if(dir.contains("north")) {
 						nextDestination = null;
@@ -529,12 +535,15 @@ public class GameAI
 	
 	private boolean viewAhead() {
 		
-		if((dir.contains("north") && !map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited())
-		||(dir.contains("south") && !map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited())
-		||(dir.contains("east") && !map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited())
-		||(dir.contains("west") && !map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited())
-		||(map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited() && map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited()
-			&& map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited() && map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited()))
+		if(dir == null || map.getBotZone() == null)
+			return true;
+		
+		if((dir.contains("north") && map.getBotZone().getI() - 1 > 0 && !map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited())
+		||(dir.contains("south") && map.getBotZone().getI() + 1 < 59 && !map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited())
+		||(dir.contains("east") && map.getBotZone().getJ() + 1 < 34 && !map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited())
+		||(dir.contains("west") && map.getBotZone().getJ() - 1 > 0  && !map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited())
+		||((map.getBotZone().getJ() - 1 > 0 && map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() - 1].isVisited()) && ( map.getBotZone().getJ() + 1 < 34 && map.getZones()[map.getBotZone().getI()][map.getBotZone().getJ() + 1].isVisited())
+			&& (map.getBotZone().getJ() - 1 > 0 && map.getZones()[map.getBotZone().getI() - 1][map.getBotZone().getJ()].isVisited()) && (map.getBotZone().getI() + 1 < 59 && map.getZones()[map.getBotZone().getI() + 1][map.getBotZone().getJ()].isVisited())))
 			return true;
 		
 		return false;

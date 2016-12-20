@@ -101,7 +101,7 @@ public class AStar {
     	
     	ArrayList<Zone>neighbors = new ArrayList<Zone>();
     
-    	if (goal.equals(exploredMap[x.getI()][x.getJ() + 1]) || (x.getJ() + 1 < 13 && exploredMap[x.getI()][x.getJ() + 1].isVisited()
+    	if (goal.equals(exploredMap[x.getI()][x.getJ() + 1]) || (x.getJ() + 1 < 34 && exploredMap[x.getI()][x.getJ() + 1].isVisited()
     			&& exploredMap[x.getI()][x.getJ() + 1].getType() != 'd' && exploredMap[x.getI()][x.getJ() + 1].getType() != 'w'))
     		neighbors.add(exploredMap[x.getI()][x.getJ() + 1]);
     	
@@ -109,10 +109,10 @@ public class AStar {
     			&& exploredMap[x.getI()][x.getJ() - 1].getType() != 'd' && exploredMap[x.getI()][x.getJ() - 1].getType() != 'w'))
     		neighbors.add(exploredMap[x.getI()][x.getJ() - 1]);
     	
-    	if (goal.equals(exploredMap[x.getI() + 1][x.getJ()]) || (x.getI() + 1 < 13 && exploredMap[x.getI() + 1][x.getJ()].isVisited()
+    	if (goal.equals(exploredMap[x.getI() + 1][x.getJ()]) || (x.getI() + 1 < 59 && exploredMap[x.getI() + 1][x.getJ()].isVisited()
     			&& exploredMap[x.getI() + 1][x.getJ()].getType() != 'd' && exploredMap[x.getI() + 1][x.getJ()].getType() != 'w'))
     		neighbors.add(exploredMap[x.getI()  + 1][x.getJ()]);
-    	
+   
     	if (goal.equals(exploredMap[x.getI() - 1][x.getJ()]) || (x.getI() - 1 > 0 && exploredMap[x.getI() - 1][x.getJ()].isVisited()
     			&& exploredMap[x.getI() - 1][x.getJ()].getType() != 'd' && exploredMap[x.getI() - 1][x.getJ()].getType() != 'w'))
     		neighbors.add(exploredMap[x.getI() - 1][x.getJ()]);

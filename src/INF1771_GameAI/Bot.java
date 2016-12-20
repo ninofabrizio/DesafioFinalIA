@@ -12,7 +12,7 @@ import INF1771_GameClient.Socket.*;
 public class Bot implements Runnable {
 
 	private String name;
-	private String host = "atari.icad.puc-rio.br";
+	private String host = "139.82.2.67";
 
 	HandleClient client = new HandleClient();
 	Map<Long, PlayerInfo> playerList = new HashMap<Long, PlayerInfo>();
@@ -28,7 +28,7 @@ public class Bot implements Runnable {
 
 	List<String> msg = new ArrayList<String>();
 	double msgSeconds = 0;
-	int timer_interval = 1000;
+	int timer_interval = 100;
 
 	public Bot(String botName) {
 		
